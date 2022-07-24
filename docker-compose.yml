@@ -1,0 +1,27 @@
+version: "3.7"
+name: todo
+
+x-db-connection-environment: &db-connection-environment
+  POSTGRES_USER: user_secret
+  POSTGRES_PASSWORD: password_secret
+
+services:
+  db: 
+    image: postgres:12.11-bullseye
+    volumes:
+      - ./todo_database:/var/lib/postgresql
+    environment:
+      <<: *db-connection-environment
+
+  backend:
+    image: sergio-giro:todo_backend
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    environment:
+      <<: *db-connection-environment
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db

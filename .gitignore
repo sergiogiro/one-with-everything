@@ -1,0 +1,7 @@
+frontend/node_modules
+todo_database/
+frontend/build
+frontend/yarn-error.log
+.idea/**
+*.iml
+requirements.txt

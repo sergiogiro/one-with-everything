@@ -17,7 +17,7 @@ function App(props: {}) {
 
   function refreshList() {
     axios
-      .get("http://localhost:8000/api/todos/")
+      .get("/api/todos/")
       .then((res) => setTodoList(res.data))
       .catch((err) => console.log(err));
   }
@@ -87,18 +87,18 @@ function App(props: {}) {
     if ("id" in item) {
       const itemWithId = item as ItemWithId;
       axios
-        .put(`http://localhost:8000/api/todos/${itemWithId.id}/`, item)
+        .put(`/api/todos/${itemWithId.id}/`, item)
         .then((res) => refreshList());
       return;
     } else {
       axios
-        .post("http://localhost:8000/api/todos/", item)
+        .post("/api/todos/", item)
         .then((res) => refreshList());
     }
   }
   function handleDelete(item: ItemWithId) {
     axios
-      .delete(`http://localhost:8000/api/todos/${item.id}`)
+      .delete(`/api/todos/${item.id}`)
       .then((res) => refreshList());
   }
   function createItem() {
