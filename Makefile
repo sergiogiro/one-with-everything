@@ -2,6 +2,11 @@
 all: requirements.txt frontend
 	docker compose build
 
+.PHONY: deploy
+deploy:
+	heroku container:push -a sergio-kaller web
+	heroku container:release -a sergio-kaller web
+
 .PHONY: frontend
 frontend:
 	( cd frontend && yarn build )

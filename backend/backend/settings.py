@@ -12,9 +12,12 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+import dj_database_url
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -25,7 +28,7 @@ SECRET_KEY = 'l4y@!^rox=b*!x-qd9xa*nt%r$$zcp!p_d&1gh@b99s-#iqsj&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["sergio-kaller.herokuapp.com"]
 
 
 # Application definition
@@ -43,8 +46,9 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',    # add this
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    # add this
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,16 +77,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 
 # Password validation
@@ -117,6 +111,10 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Extra places for collectstatic to find static files.
+STATICFILES_DIRS = (
+    os.path.join(os.path.dirname(BASE_DIR), 'frontend_build'),
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
@@ -125,6 +123,21 @@ STATIC_URL = '/static/'
 
 
 # we whitelist localhost:3000 because that's where frontend will be served
-CORS_ORIGIN_WHITELIST = (
-        ['http://localhost:3000']
- )
+#CORS_ORIGIN_WHITELIST = (
+#        ['http://localhost:3000']
+# )
+
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {'default': dj_database_url.config(default=os.environ["DATABASE_URL"])}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': "postgres",
+            'USER': os.environ["POSTGRES_USER"],
+            'PASSWORD': os.environ["POSTGRES_PASSWORD"],
+            'HOST': os.environ["DB_HOST"],
+            'PORT': os.environ["DB_PORT"],
+        }
+    }
+
