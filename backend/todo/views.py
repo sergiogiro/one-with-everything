@@ -2,13 +2,13 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators import csrf
 from rest_framework import viewsets  # add this
 from rest_framework.views import APIView
 
-from .serializers import TodoSerializer  # add this
 from .models import Todo  # add this
-from django.views import View
+from .serializers import TodoSerializer  # add this
 
 
 class TodoView(viewsets.ModelViewSet):  # add this

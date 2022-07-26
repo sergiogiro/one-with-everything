@@ -2,10 +2,10 @@
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.staticfiles import views as static_views
 from django.contrib import admin
+from django.contrib.staticfiles import views as static_views
 from django.shortcuts import redirect
-from django.urls import path, include, re_path  # add this
+from django.urls import include, path, re_path  # add this
 from rest_framework import routers  # add this
 from todo import views  # add this
 
