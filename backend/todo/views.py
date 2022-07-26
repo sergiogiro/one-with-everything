@@ -22,5 +22,4 @@ class SimpleView(APIView):
         return JsonResponse({"result": "get" + self.request.GET.get("ppp", "nothing")})
 
     def post(self, request, *args):
-        return JsonResponse(
-            {"result": "post" + request.data.get("ppp", "nothing")})
+        return JsonResponse({"result": "post" + request.data.get("ppp", "nothing")})
