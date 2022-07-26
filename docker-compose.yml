@@ -5,23 +5,44 @@ x-db-connection-environment: &db-connection-environment
   POSTGRES_USER: user_secret
   POSTGRES_PASSWORD: password_secret
 
+x-debug-environment: &debug-environment
+  SECRET_KEY: "l4y@!^rox=b*!x-qd9xa*nt%r$$zcp!p_d&1gh@b99s-#iqsj&"
+  DEBUG: True
+
 services:
-  db: 
+  db:
     image: postgres:12.11-bullseye
     volumes:
       - ./todo_database:/var/lib/postgresql
     environment:
+      <<: *debug-environment
       <<: *db-connection-environment
 
   backend:
-    image: sergio-giro:todo_backend
+    image: sergio-giro/todo_backend
     build:
       context: .
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
+      <<: *debug-environment
       <<: *db-connection-environment
       DB_HOST: db
       DB_PORT: 5432
+      WAIT_HOSTS: db:5432, redis:6379
     depends_on:
       - db
+
+  redis:
+    image: redis:7.0.4-bullseye
+
+  celery:
+    image: sergio-giro/todo_celery
+    build:
+      context: ./celery
+    environment:
+      CELERY_BROKER: redis://redis:6379
+      WAIT_HOSTS: redis:6379
+      <<: *debug-environment
+    entrypoint:
+      celery worker
