@@ -5,7 +5,9 @@ all: requirements.txt frontend
 .PHONY: deploy
 deploy:
 	heroku container:push -a sergio-kaller web
+	( cd celery && heroku container:push -a sergio-kaller worker )
 	heroku container:release -a sergio-kaller web
+	( cd celery && heroku container:release -a sergio-kaller worker )
 
 .PHONY: frontend
 frontend:

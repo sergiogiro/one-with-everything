@@ -137,4 +137,4 @@ else:
         }
     }
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER")
+CELERY_BROKER_URL = os.getenv("REDIS_URL")

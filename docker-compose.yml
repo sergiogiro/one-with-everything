@@ -12,7 +12,7 @@ x-debug-environment: &debug-environment
   DEBUG: True
 
 x-celery-environment: &celery-environment
-  CELERY_BROKER: redis://redis:6379
+  REDIS_URL: redis://redis:6379
 
 services:
   db:
@@ -43,7 +43,9 @@ services:
     image: redis:7.0.4-bullseye
 
   celery:
-    image: sergio-giro/todo_backend
+    image: sergio-giro/todo_celery
+    build:
+      context: celery/
     environment:
       <<: *db-connection-environment
       <<: *celery-environment
