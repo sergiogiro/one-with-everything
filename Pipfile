@@ -11,6 +11,8 @@ gunicorn = "*"
 whitenoise = "*"
 psycopg2 = "*"
 dj-database-url = "*"
+celery = "*"
+redis = "*"
 
 [dev-packages]
 pre-commit = "*"

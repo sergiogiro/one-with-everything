@@ -4,10 +4,15 @@ name: todo
 x-db-connection-environment: &db-connection-environment
   POSTGRES_USER: user_secret
   POSTGRES_PASSWORD: password_secret
+  DB_HOST: db
+  DB_PORT: 5432
 
 x-debug-environment: &debug-environment
   SECRET_KEY: "l4y@!^rox=b*!x-qd9xa*nt%r$$zcp!p_d&1gh@b99s-#iqsj&"
   DEBUG: True
+
+x-celery-environment: &celery-environment
+  CELERY_BROKER: redis://redis:6379
 
 services:
   db:
@@ -24,11 +29,12 @@ services:
       context: .
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/:/backend/
     environment:
       <<: *debug-environment
       <<: *db-connection-environment
-      DB_HOST: db
-      DB_PORT: 5432
+      <<: *celery-environment
       WAIT_HOSTS: db:5432, redis:6379
     depends_on:
       - db
@@ -37,12 +43,16 @@ services:
     image: redis:7.0.4-bullseye
 
   celery:
-    image: sergio-giro/todo_celery
-    build:
-      context: ./celery
+    image: sergio-giro/todo_backend
     environment:
-      CELERY_BROKER: redis://redis:6379
-      WAIT_HOSTS: redis:6379
+      <<: *db-connection-environment
+      <<: *celery-environment
       <<: *debug-environment
+      WAIT_HOSTS: redis:6379
+    working_dir: /backend
+    volumes:
+      - ./backend/:/backend/
+    ports:
+      - "6379:6379"
     entrypoint:
-      celery worker
+      celery -A backend worker

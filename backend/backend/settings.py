@@ -136,3 +136,5 @@ else:
             "PORT": os.environ["DB_PORT"],
         }
     }
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER")

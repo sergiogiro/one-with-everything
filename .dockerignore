@@ -1,3 +1,4 @@
 frontend/**
 !frontend/build
 todo_database/**
+.env
