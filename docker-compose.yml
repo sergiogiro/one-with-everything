@@ -18,13 +18,12 @@ services:
   db:
     image: postgres:12.11-bullseye
     volumes:
-      - ./todo_database:/var/lib/postgresql
+      - ./todo_database:/var/lib/postgresql/data
     environment:
-      <<: *debug-environment
-      <<: *db-connection-environment
+      <<: [*debug-environment, *db-connection-environment]
 
   backend:
-    image: sergio-giro/todo_backend
+    image: sergiogiro/todo_backend
     build:
       context: .
     ports:
@@ -32,9 +31,7 @@ services:
     volumes:
       - ./backend/:/backend/
     environment:
-      <<: *debug-environment
-      <<: *db-connection-environment
-      <<: *celery-environment
+      <<: [*debug-environment, *db-connection-environment, *celery-environment]
       WAIT_HOSTS: db:5432, redis:6379
     depends_on:
       - db
@@ -43,13 +40,11 @@ services:
     image: redis:7.0.4-bullseye
 
   celery:
-    image: sergio-giro/todo_celery
+    image: sergiogiro/todo_celery
     build:
       context: celery/
     environment:
-      <<: *db-connection-environment
-      <<: *celery-environment
-      <<: *debug-environment
+      <<: [*db-connection-environment, *celery-environment, *debug-environment]
       WAIT_HOSTS: redis:6379
     working_dir: /backend
     volumes:

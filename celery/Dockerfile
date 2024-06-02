@@ -2,7 +2,7 @@
 # in docker-compose.yml because otherwise there's
 # no way to tell Heroku what's the entrypoint.
 
-FROM sergio-giro/todo_backend
+FROM sergiogiro/todo_backend
 
 COPY start_celery.sh /
 
