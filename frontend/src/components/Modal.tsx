@@ -20,6 +20,8 @@ export default function CustomModal(props: {
   toggle: () => void;
   onSave: (item: Item) => void;
   isEdit?: boolean;
+  progress?: number;
+  errorMessage?: string;
 }) {
   const [activeItem, setActiveItem] = useState<Item>(props.activeItem);
 
@@ -36,7 +38,7 @@ export default function CustomModal(props: {
     setActiveItem({ ...activeItem, depiction });
   }
 
-  const { toggle, onSave, isEdit } = props;
+  const { toggle, onSave, isEdit, errorMessage } = props;
 
   const depictionLabel = "Depiction" + (isEdit ? " (Drop to override)" : "")
 
@@ -88,9 +90,32 @@ export default function CustomModal(props: {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button color="success" onClick={() => onSave(activeItem)}>
-          Save
-        </Button>
+        {(() => {
+          if (props.progress !== undefined) {
+            const progress = Math.floor(props.progress);
+            return <div className="d-flex justify-content-center" style={{width:"100%"}}>
+              <div className="progress justify-content-left" style={{width: "50%"}}>
+                <div
+                  className="progress-bar"
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  style={{width: progress + "%"}}
+                >
+                  {progress}%
+                </div>
+              </div>
+            </div>;
+          } else {
+            return <>
+              {errorMessage !== undefined && <div className="alert alert-danger" role="alert">{errorMessage}</div>}
+              <Button color="success" onClick={() => onSave(activeItem)}>
+                Save
+              </Button>
+            </>
+          }
+        })()}
       </ModalFooter>
     </Modal>
   );

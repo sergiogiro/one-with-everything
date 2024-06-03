@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Modal from "./components/Modal";
 import axios from "axios";
+import { AxiosResponse } from "axios";
 import { Item, ItemWithId } from "./Types";
 
 
@@ -10,6 +11,8 @@ type ModalState = {
   showModal: boolean;
   modalIsEdit: boolean;
   activeItem: Item;
+  progress?: number;
+  errorMessage?: string;
 }
 
 function App(props: {}) {
@@ -20,6 +23,7 @@ function App(props: {}) {
     activeItem: { title: "", description: "", completed: false },
   });
   const [todoList, setTodoList] = useState<ItemWithId[]>([]);
+
   function refreshList() {
     axios
       .get("/api/todos/")
@@ -91,7 +95,6 @@ function App(props: {}) {
   }
 
   function handleSubmit(item: Item) {
-    toggle();
     const formData = new FormData();
     formData.append("title", item.title);
     formData.append("description", item.description);
@@ -99,18 +102,32 @@ function App(props: {}) {
     if (item.depiction && typeof item.depiction !== "string") {
       formData.append("depiction", item.depiction as Blob);
     }
+    let requestPath = "/api/todos/";
+    let httpMethod = axios.post;
     if ("id" in item) {
+      httpMethod = axios.put;
       const itemWithId = item as ItemWithId;
-      axios
-        .put(`/api/todos/${itemWithId.id}/`, formData)
-        .then((res) => refreshList());
-      return;
-    } else {
-      axios
-        .post("/api/todos/", formData)
-        .then((res) => refreshList());
+      requestPath = requestPath + itemWithId.id + "/";
     }
+
+    httpMethod(requestPath, formData, {
+        onUploadProgress: (progressEvent) => {
+          const progress = (progressEvent.loaded / progressEvent.total) * 100 - 2;
+          setModalState({...modalState, progress: progress});
+        }
+      })
+      .then(handleSubmitSuccess)
+      .catch((_) => {setModalState({...modalState, progress: undefined, errorMessage: "Error uploading"});})
   }
+
+  function handleSubmitSuccess(res: AxiosResponse<any>): void {
+    setModalState({...modalState, progress: 100});
+    setTimeout(() => {
+      setModalState({...modalState, showModal: false, progress: undefined, errorMessage: ""});
+      refreshList();
+    }, 500);
+  }
+
   function handleDelete(item: ItemWithId) {
     axios
       .delete(`/api/todos/${item.id}`)
@@ -140,7 +157,7 @@ function App(props: {}) {
         </div>
       </div>
       {modalState.showModal ? (
-        <Modal activeItem={modalState.activeItem} toggle={toggle} onSave={handleSubmit} isEdit={modalState.modalIsEdit} />
+        <Modal activeItem={modalState.activeItem} toggle={toggle} onSave={handleSubmit} isEdit={modalState.modalIsEdit} progress={modalState.progress} errorMessage={modalState.errorMessage}/>
       ) : null}
     </main>
   );
