@@ -10,9 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+import logging
 import os
 
 import dj_database_url
+
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -138,3 +141,42 @@ else:
     }
 
 CELERY_BROKER_URL = os.getenv("REDIS_URL")
+
+
+# Configuration of storages
+#
+
+IMAGE_STORAGE_BUCKET_VAR = "AWS_S3_IMAGE_BUCKET_NAME"
+IMAGE_STORAGE_ACCESS_KEY_ENV_VAR = "AWS_S3_IMAGE_STORAGE_ACCESS_KEY_ID"
+IMAGE_STORAGE_SECRET_ENV_VAR = "AWS_S3_IMAGE_SECRET_ACCESS_KEY"
+
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+
+if all(
+    [
+        os.getenv(IMAGE_STORAGE_BUCKET_VAR),
+        os.getenv(IMAGE_STORAGE_ACCESS_KEY_ENV_VAR),
+        os.getenv(IMAGE_STORAGE_SECRET_ENV_VAR),
+    ]
+):
+    STORAGES["images"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": os.getenv(IMAGE_STORAGE_BUCKET_VAR),
+            "access_key": os.getenv(IMAGE_STORAGE_ACCESS_KEY_ENV_VAR),
+            "secret_key": os.getenv(IMAGE_STORAGE_SECRET_ENV_VAR),
+        },
+    }
+else:
+    logger.warn(
+        "Env variables for image storage not present, " "storing images locally"
+    )
+    STORAGES["images"] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }

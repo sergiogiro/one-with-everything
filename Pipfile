@@ -14,6 +14,7 @@ dj-database-url = "*"
 celery = "*"
 redis = "*"
 pillow = "*"
+django-storages = {extras = ["s3"], version = "*"}
 
 [dev-packages]
 pre-commit = "*"
