@@ -1,5 +1,6 @@
 // frontend/src/components/Modal.js
 
+import { FileUploader } from "react-drag-drop-files";
 import React, { ChangeEvent, useState } from "react";
 import {
   Button,
@@ -18,6 +19,7 @@ export default function CustomModal(props: {
   activeItem: Item;
   toggle: () => void;
   onSave: (item: Item) => void;
+  isEdit?: boolean;
 }) {
   const [activeItem, setActiveItem] = useState<Item>(props.activeItem);
 
@@ -30,7 +32,13 @@ export default function CustomModal(props: {
     }
   }
 
-  const { toggle, onSave } = props;
+  function handleFileNameChange(depiction: File) {
+    setActiveItem({ ...activeItem, depiction });
+  }
+
+  const { toggle, onSave, isEdit } = props;
+
+  const depictionLabel = "Depiction" + (isEdit ? " (Drop to override)" : "")
 
   return (
     <Modal isOpen={true} toggle={toggle}>
@@ -55,6 +63,15 @@ export default function CustomModal(props: {
               value={activeItem.description}
               onChange={handleChange}
               placeholder="Enter Todo description"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label for="depiction">{depictionLabel}</Label>
+            <FileUploader
+              handleChange={handleFileNameChange}
+              name="depictionFile"
+              types={["png", "jpg", "jpeg", "webp"]}
+              label={"Drop a file here or click to upload"}
             />
           </FormGroup>
           <FormGroup check>

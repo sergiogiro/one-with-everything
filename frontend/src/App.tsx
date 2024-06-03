@@ -5,16 +5,21 @@ import Modal from "./components/Modal";
 import axios from "axios";
 import { Item, ItemWithId } from "./Types";
 
+
+type ModalState = {
+  showModal: boolean;
+  modalIsEdit: boolean;
+  activeItem: Item;
+}
+
 function App(props: {}) {
   const [viewCompleted, setViewCompleted] = useState<boolean>(false);
-  const [activeItem, setActiveItem] = useState<Item>({
-    title: "",
-    description: "",
-    completed: false,
+  const [modalState, setModalState] = useState<ModalState>({
+    showModal: false,
+    modalIsEdit: false,
+    activeItem: { title: "", description: "", completed: false },
   });
   const [todoList, setTodoList] = useState<ItemWithId[]>([]);
-  const [modal, setModal] = useState<boolean>(false);
-
   function refreshList() {
     axios
       .get("/api/todos/")
@@ -54,45 +59,55 @@ function App(props: {}) {
     return newItems.map((item: ItemWithId) => (
       <li
         key={item.id}
-        className="list-group-item d-flex justify-content-between align-items-center"
+        className="list-group-item todo-list-item"
       >
-        <span
-          className={`todo-title mr-2 ${viewCompleted ? "completed-todo" : ""}`}
-          title={item.description}
-        >
-          {item.title}
-        </span>
-        <span>
-          <button
-            onClick={() => editItem(item)}
-            className="btn btn-secondary mr-2"
+        <div className="d-flex justify-content-between align-items-center">
+          <span
+            className={`todo-title mr-2 ${viewCompleted ? "completed-todo" : ""}`}
+            title={item.description}
           >
-            {" "}
-            Edit{" "}
-          </button>
-          <button onClick={() => handleDelete(item)} className="btn btn-danger">
-            Delete{" "}
-          </button>
-        </span>
+            {item.title}
+          </span>
+          <span>
+            <button
+              onClick={() => editItem(item)}
+              className="btn btn-secondary mr-2"
+            >
+              {" "}
+              Edit{" "}
+            </button>
+            <button onClick={() => handleDelete(item)} className="btn btn-danger">
+              Delete{" "}
+            </button>
+          </span>
+        </div>
+        <img src={item.depiction as string} alt="depiction" />
       </li>
     ));
   }
 
   function toggle() {
-    setModal(!modal);
+    setModalState({...modalState, showModal: !modalState.showModal});
   }
 
   function handleSubmit(item: Item) {
     toggle();
+    const formData = new FormData();
+    formData.append("title", item.title);
+    formData.append("description", item.description);
+    formData.append("completed", item.completed.toString());
+    if (item.depiction && typeof item.depiction !== "string") {
+      formData.append("depiction", item.depiction as Blob);
+    }
     if ("id" in item) {
       const itemWithId = item as ItemWithId;
       axios
-        .put(`/api/todos/${itemWithId.id}/`, item)
+        .put(`/api/todos/${itemWithId.id}/`, formData)
         .then((res) => refreshList());
       return;
     } else {
       axios
-        .post("/api/todos/", item)
+        .post("/api/todos/", formData)
         .then((res) => refreshList());
     }
   }
@@ -103,12 +118,10 @@ function App(props: {}) {
   }
   function createItem() {
     const item = { title: "", description: "", completed: false };
-    setActiveItem(item);
-    setModal(!modal);
+    setModalState({activeItem: item, showModal: true, modalIsEdit: false});
   }
   function editItem(item: Item) {
-    setActiveItem(item);
-    setModal(!modal);
+    setModalState({activeItem: item, showModal: true, modalIsEdit: true});
   }
   return (
     <main className="content">
@@ -126,8 +139,8 @@ function App(props: {}) {
           </div>
         </div>
       </div>
-      {modal ? (
-        <Modal activeItem={activeItem} toggle={toggle} onSave={handleSubmit} />
+      {modalState.showModal ? (
+        <Modal activeItem={modalState.activeItem} toggle={toggle} onSave={handleSubmit} isEdit={modalState.modalIsEdit} />
       ) : null}
     </main>
   );
