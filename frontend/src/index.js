@@ -6,12 +6,23 @@
   import 'bootstrap/dist/css/bootstrap.min.css';       // add this
   import './index.css';
   import App from './App';
+  import { Provider } from 'react-redux';
+  import { configureStore } from '@reduxjs/toolkit';
   import * as serviceWorker from './serviceWorker';
+  import { todoSlice } from './features/todo/todoSlice';
+
+  let store = configureStore({
+    reducer: {
+      todo: todoSlice.reducer
+    }
+  });
 
   const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(
     <React.StrictMode>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </React.StrictMode>
   );
 

@@ -1,8 +1,11 @@
 import axios from "axios";
 import { AxiosResponse } from "axios";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Item, ItemWithId } from "../Types";
 import Modal from "./Modal";
+import { useDispatch, useSelector } from "react-redux";
+import { create, edit, del, refresh } from "../features/todo/todoSlice";
+import { RootState } from "../Redux";
 
 
 type ModalState = {
@@ -22,14 +25,21 @@ function TodoContainer(props: {}) {
     modalIsEdit: false,
     activeItem: { title: "", description: "", completed: false },
   });
-  const [todoList, setTodoList] = useState<ItemWithId[]>([]);
 
-  function refreshList() {
+  const dispatch = useDispatch();
+
+  const refreshList = useCallback(() => {
     axios
       .get("/api/todos/")
-      .then((res) => setTodoList(res.data))
+      .then((res) => dispatch(refresh(res.data)))
       .catch((err) => console.log(err));
-  }
+  }, [dispatch]);
+
+
+  useEffect(() => refreshList(), [refreshList]);
+
+  const { idOrder, todoMap } = useSelector((state: RootState) => state.todo);
+
   function displayCompleted(status: boolean) {
     if (status) {
       return setViewCompleted(true);
@@ -52,10 +62,12 @@ function TodoContainer(props: {}) {
     }
     let requestPath = "/api/todos/";
     let httpMethod = axios.post;
+    let isEdit = false;
     if ("id" in item) {
       httpMethod = axios.put;
       const itemWithId = item as ItemWithId;
       requestPath = requestPath + itemWithId.id + "/";
+      isEdit = true;
     }
 
     httpMethod(requestPath, formData, {
@@ -64,22 +76,22 @@ function TodoContainer(props: {}) {
         setModalState({ ...modalState, progress: progress });
       }
     })
-      .then(handleSubmitSuccess)
+      .then((res: AxiosResponse<any>) => handleSubmitSuccess(isEdit, res))
       .catch((_) => { setModalState({ ...modalState, progress: undefined, errorMessage: "Error uploading" }); })
   }
 
-  function handleSubmitSuccess(res: AxiosResponse<any>): void {
+  function handleSubmitSuccess(isEdit: boolean, res: AxiosResponse<any>): void {
     setModalState({ ...modalState, progress: 100 });
     setTimeout(() => {
       setModalState({ ...modalState, showModal: false, progress: undefined, errorMessage: "" });
-      refreshList();
+      dispatch(isEdit ? edit(res.data) : create(res.data));
     }, 500);
   }
 
-  function handleDelete(item: ItemWithId) {
+  function handleDelete(id: string) {
     axios
-      .delete(`/api/todos/${item.id}`)
-      .then((res) => refreshList());
+      .delete(`/api/todos/${id}`)
+      .then((res) => dispatch(del(id)));
   }
   function createItem() {
     const item = { title: "", description: "", completed: false };
@@ -109,9 +121,9 @@ function TodoContainer(props: {}) {
   }
 
   function renderItems() {
-    const newItems = todoList.filter(
-      (item) => item.completed === viewCompleted
-    );
+    const newItems = idOrder.filter(
+      (id) => todoMap[id].completed === viewCompleted
+    ).map((id) => { return {...todoMap[id], id}; });
     return newItems.map((item: ItemWithId) => (
       <li
         key={item.id}
@@ -132,7 +144,7 @@ function TodoContainer(props: {}) {
               {" "}
               Edit{" "}
             </button>
-            <button onClick={() => handleDelete(item)} className="btn btn-danger">
+            <button onClick={() => handleDelete(item.id)} className="btn btn-danger">
               Delete{" "}
             </button>
           </span>
