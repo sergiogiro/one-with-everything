@@ -72,7 +72,7 @@ export default function CustomModal(props: {
             <FileUploader
               handleChange={handleFileNameChange}
               name="depictionFile"
-              types={["png", "jpg", "jpeg", "webp"]}
+              types={["png", "jpg", "jpeg", "webp", "tif"]}
               label={"Drop a file here or click to upload"}
             />
           </FormGroup>
