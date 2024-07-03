@@ -26,3 +26,23 @@ class Todo(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TaskGeneratedTodo(models.Model):
+    task_id = models.CharField(max_length=120)
+    todo_id = models.ForeignKey("Todo", on_delete=models.CASCADE)
+    sequence_number = models.IntegerField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["task_id", "sequence_number"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["task_id", "sequence_number"],
+                name="unique_sequence_number_for_task",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.task_id} - {self.todo_id} - {self.sequence_number}"

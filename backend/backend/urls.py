@@ -11,11 +11,15 @@ from todo import views  # add this
 
 router = routers.DefaultRouter()  # add this
 router.register(r"todos", views.TodoView, "todo")  # add this
+router.register(
+    r"generated-todos", views.GeneratedTodoView, "generated-todo"
+)  # add this
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),  # add this
-    path("simple/", views.SimpleView.as_view()),
+    path("api/stream-todos", views.TodosStream.as_view()),
     # path('', lambda req: redirect(settings.STATIC_URL + "/index.html")),
     re_path("^$", static_views.serve, kwargs={"path": "index.html"}),
 ] + static(settings.STATIC_URL)
