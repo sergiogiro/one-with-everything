@@ -1,15 +1,10 @@
-import axios from "axios";
-import { AxiosResponse } from "axios";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Item, ItemWithId } from "../Types";
 import Modal from "./Modal";
-import { useDispatch, useSelector } from "react-redux";
-import { create, edit, del, refresh } from "../features/todo/todoSlice";
-import { RootState } from "../Redux";
+import { create, edit, del, refresh, progress } from "../features/todo/todoSlice";
 
 
 type ModalState = {
-  showModal: boolean;
   modalIsEdit: boolean;
   activeItem: Item;
   progress?: number;
@@ -21,24 +16,20 @@ function TodoContainer(props: {}) {
 
   const [viewCompleted, setViewCompleted] = useState<boolean>(false);
   const [modalState, setModalState] = useState<ModalState>({
-    showModal: false,
     modalIsEdit: false,
     activeItem: { title: "", description: "", completed: false },
   });
 
-  const dispatch = useDispatch();
-
-  const refreshList = useCallback(() => {
-    axios
-      .get("/api/todos/")
-      .then((res) => dispatch(refresh(res.data)))
-      .catch((err) => console.log(err));
-  }, [dispatch]);
+  const [isInputting, setIsInputting] = useState<boolean>(false);
+  const progressData = progress.useQuery(undefined);
 
 
-  useEffect(() => refreshList(), [refreshList]);
+  const todoStateRes = refresh.useQuery(undefined);
+  const todoData = todoStateRes.data;
 
-  const { idOrder, todoMap } = useSelector((state: RootState) => state.todo);
+  const [ createTrigger, createData ] = create.useMutation();
+  const [ delTrigger ] = del.useMutation();
+  const [ editTrigger, editData ] = edit.useMutation();
 
   function displayCompleted(status: boolean) {
     if (status) {
@@ -49,56 +40,29 @@ function TodoContainer(props: {}) {
   }
 
   function toggle() {
-    setModalState({ ...modalState, showModal: !modalState.showModal });
-  }
-
-  function handleSubmit(item: Item) {
-    const formData = new FormData();
-    formData.append("title", item.title);
-    formData.append("description", item.description);
-    formData.append("completed", item.completed.toString());
-    if (item.depiction && typeof item.depiction !== "string") {
-      formData.append("depiction", item.depiction as Blob);
+    progressData.refetch();
+    createData.reset();
+    editData.reset();
+    if (isInputting) {
+      setIsInputting(false);
+    } else {
+      setIsInputting(true);
     }
-    let requestPath = "/api/todos/";
-    let httpMethod = axios.post;
-    let isEdit = false;
-    if ("id" in item) {
-      httpMethod = axios.put;
-      const itemWithId = item as ItemWithId;
-      requestPath = requestPath + itemWithId.id + "/";
-      isEdit = true;
-    }
-
-    httpMethod(requestPath, formData, {
-      onUploadProgress: (progressEvent) => {
-        const progress = (progressEvent.loaded / progressEvent.total) * 100 - 2;
-        setModalState({ ...modalState, progress: progress });
-      }
-    })
-      .then((res: AxiosResponse<any>) => handleSubmitSuccess(isEdit, res))
-      .catch((_) => { setModalState({ ...modalState, progress: undefined, errorMessage: "Error uploading" }); })
-  }
-
-  function handleSubmitSuccess(isEdit: boolean, res: AxiosResponse<any>): void {
-    setModalState({ ...modalState, progress: 100 });
-    setTimeout(() => {
-      setModalState({ ...modalState, showModal: false, progress: undefined, errorMessage: "" });
-      dispatch(isEdit ? edit(res.data) : create(res.data));
-    }, 500);
   }
 
   function handleDelete(id: string) {
-    axios
-      .delete(`/api/todos/${id}`)
-      .then((res) => dispatch(del(id)));
+    delTrigger(id);
   }
+
   function createItem() {
     const item = { title: "", description: "", completed: false };
-    setModalState({ activeItem: item, showModal: true, modalIsEdit: false });
+    setModalState({ activeItem: item, modalIsEdit: false });
+    setIsInputting(true);
   }
+
   function editItem(item: Item) {
-    setModalState({ activeItem: item, showModal: true, modalIsEdit: true });
+    setModalState({ activeItem: item, modalIsEdit: true });
+    setIsInputting(true);
   }
 
   function renderTabList() {
@@ -121,9 +85,12 @@ function TodoContainer(props: {}) {
   }
 
   function renderItems() {
-    const newItems = idOrder.filter(
-      (id) => todoMap[id].completed === viewCompleted
-    ).map((id) => { return {...todoMap[id], id}; });
+    if (todoData === undefined) {
+      return;
+    }
+    const newItems = todoData.idOrder.filter(
+      (id) => todoData.todoMap[id].completed === viewCompleted
+    ).map((id) => { return {...todoData.todoMap[id], id}; });
     return newItems.map((item: ItemWithId) => (
       <li
         key={item.id}
@@ -154,6 +121,11 @@ function TodoContainer(props: {}) {
     ));
   }
 
+  const errorMessage = (createData.error || editData.error) ? "Submit error" : undefined
+  // const showModal = isInputting;
+
+  const triggerSave = (item: Item) => modalState.modalIsEdit ? editTrigger(item) : createTrigger(item);
+
   return <div className="row ">
     <div className="col-md-6 col-sm-10 mx-auto p-0">
       <div className="card p-3">
@@ -166,14 +138,26 @@ function TodoContainer(props: {}) {
         <ul className="list-group list-group-flush">{renderItems()}</ul>
       </div>
     </div>
-    {modalState.showModal
+    {isInputting
       && <Modal
         activeItem={modalState.activeItem}
         toggle={toggle}
-        onSave={handleSubmit}
-        isEdit={modalState.modalIsEdit}
-        progress={modalState.progress}
-        errorMessage={modalState.errorMessage}
+        progress={progressData.data}
+        errorMessage={errorMessage}
+        onSave={(item) => triggerSave(item).unwrap().then(
+          () => {
+            setTimeout(
+              () => {
+                toggle();
+              },
+              500,
+            )
+          },
+          (error) => {
+            progressData.refetch();
+            return error;
+          },
+      )}
       />}
   </div>;
 }
