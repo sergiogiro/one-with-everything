@@ -13,6 +13,6 @@ RUN pip install -r /requirements.txt
 
 COPY ./backend /backend
 
-COPY ./frontend/build /frontend_build
+COPY ./frontend/dist /frontend_build
 
 ENTRYPOINT /backend/start_backend.sh

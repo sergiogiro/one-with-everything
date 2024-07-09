@@ -1,6 +1,6 @@
 frontend/node_modules
 todo_database/
-frontend/build
+frontend/dist
 frontend/yarn-error.log
 backend/staticfiles/
 .idea/

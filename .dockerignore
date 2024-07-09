@@ -1,4 +1,4 @@
 frontend/**
-!frontend/build
+!frontend/dist
 todo_database/**
 .env
