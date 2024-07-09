@@ -88,9 +88,9 @@ function TodoContainer(props: {}) {
     if (todoData === undefined) {
       return;
     }
-    const newItems = todoData.idOrder.filter(
-      (id) => todoData.todoMap[id].completed === viewCompleted
-    ).map((id) => { return {...todoData.todoMap[id], id}; });
+    const newItems = todoData.todos.ids.filter(
+      (id) => todoData.todos.entities[id].completed === viewCompleted
+    ).map((id) => ({...todoData.todos.entities[id], id}));
     return newItems.map((item: ItemWithId) => (
       <li
         key={item.id}

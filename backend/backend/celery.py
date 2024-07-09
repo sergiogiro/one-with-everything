@@ -30,7 +30,7 @@ def generate_todos_task(self):
 
     end = -1
     try:
-        for i, todo in enumerate(Todo.objects.all()):
+        for i, todo in enumerate(Todo.objects.order_by("-id").all()):
             print(f"[{self.request.id}]: Creating {i}")
             TaskGeneratedTodo.objects.create(
                 task_id=self.request.id, todo_id=todo, sequence_number=i
