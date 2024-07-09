@@ -1,4 +1,5 @@
 # todo/views.py
+import time
 from typing import Optional
 
 from celery.result import AsyncResult
@@ -56,6 +57,7 @@ class TodosStream(APIView):
     def post(self, *args):
         task_id = celery.generate_todos_task.delay().id
         last = -1
+        time.sleep(0.5)
         return self.do_get(task_id, last, end=None, task_error=None)
 
     @staticmethod
