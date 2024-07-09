@@ -40,7 +40,7 @@ async function submitUpsertItem(
   if (item.depiction && typeof item.depiction !== "string") {
     formData.append("depiction", item.depiction as Blob);
   }
-  let requestPath = "/api/todos/";
+  let requestPath = "api/todos/";
   let httpMethod = axios.post;
   if ("id" in item) {
     httpMethod = axios.put;
@@ -122,7 +122,7 @@ async function streamTodos(apiLifecycle: QueryCacheLifecycleApi<void, BaseQueryF
     if (typeof(params.end) === "number" && params.last >= params.end) {
       break;
     }
-    const res = await axios.get("/api/stream-todos", { params: {...params} });
+    const res = await axios.get("api/stream-todos", { params: {...params} });
     if ("end" in res.data) {
       params.end = res.data.end;
     }
@@ -171,7 +171,7 @@ export const todoApi = createApi({
       queryFn: () => new Promise((resolve, _) => resolve({data: undefined}))
     }),
     "refresh": builder.query<TodoState, void>({
-      query: (_) => ({ "url": "/stream-todos", "method": "POST" }),
+      query: (_) => ({ "url": "stream-todos", "method": "POST" }),
       async onCacheEntryAdded(_, apiLifecycle) {
         return streamTodos(apiLifecycle);
       },
