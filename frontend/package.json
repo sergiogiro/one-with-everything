@@ -53,7 +53,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "prettier": "^2.5.1",
-    "ts-jest": "^29.2.0"
+    "ts-jest": "^29.2.4"
   },
   "homepage": "/static/"
 }
